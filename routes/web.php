@@ -2,8 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\FileUploadController;
 
-
+Route::post('/upload', [FileUploadController::class, 'upload'])->name('file.upload');
+Route::get('/upload', function () {
+    return Inertia::render('upload');
+})->name('file.upload');
 
 Route::get('/', function () {
     return Inertia::render('welcome');
