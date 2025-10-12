@@ -14,6 +14,7 @@ const Navbar = () => {
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Upload', href: '/upload' },
     ];
+
     const { auth } = usePage<SharedData>().props;
     const cleanup = useMobileNavigation();
 
@@ -30,7 +31,7 @@ const Navbar = () => {
                 {auth.user ? (
                     <>
                         {authlinks.map((link) => (
-                            <Link key={link.href} href={link.href}>
+                            <Link key={link.href} href={link.href} className="rounded-sm px-3 py-1.5 transition-all duration-300 hover:scale-[1.09]">
                                 {link.label}
                             </Link>
                         ))}
