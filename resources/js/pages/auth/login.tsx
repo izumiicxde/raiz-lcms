@@ -1,16 +1,16 @@
 import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
-import InputError from '@/components/input-error';
-import Navbar from '@/components/navbar';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+
+import FormInput from '@/components/custom-ui/form-input';
+import Navbar from '@/components/navbar';
+import TextLink from '@/components/text-link';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import AuthLayout from '@/layouts/auth-layout';
 
 interface LoginProps {
     status?: string;
@@ -18,50 +18,54 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const formFields = [
+        {
+            htmlfor: 'login',
+            label: 'Email or UUCMS No',
+            placeholder: 'email@example.com or UUCMS1234',
+            tabIndex: 1,
+            inputType: 'text',
+        },
+        {
+            htmlfor: 'password',
+            label: 'Password',
+            placeholder: 'Password',
+            tabIndex: 2,
+            inputType: 'password',
+        },
+    ];
+
     return (
         <>
             <Navbar />
-            <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+            <AuthLayout title="Log in to your account" description="Enter your email or UUCMS number and password below to log in">
                 <Head title="Log in" />
                 <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="flex flex-col gap-6">
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-6">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        name="email"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="email"
-                                        placeholder="email@example.com"
+                                {formFields.map((field) => (
+                                    <FormInput
+                                        key={field.htmlfor}
+                                        htmlfor={field.htmlfor}
+                                        label={
+                                            field.htmlfor === 'password' && canResetPassword ? (
+                                                <div className="flex items-center justify-between">
+                                                    <span>Password</span>
+                                                    <TextLink href={request()} className="text-sm" tabIndex={5}>
+                                                        Forgot password?
+                                                    </TextLink>
+                                                </div>
+                                            ) : (
+                                                field.label
+                                            )
+                                        }
+                                        placeholder={field.placeholder}
+                                        tabIndex={field.tabIndex}
+                                        errors={errors}
+                                        inputType={field.inputType as 'text' | 'password'}
                                     />
-                                    <InputError message={errors.email} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <div className="flex items-center">
-                                        <Label htmlFor="password">Password</Label>
-                                        {canResetPassword && (
-                                            <TextLink href={request()} className="ml-auto text-sm" tabIndex={5}>
-                                                Forgot password?
-                                            </TextLink>
-                                        )}
-                                    </div>
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        name="password"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="current-password"
-                                        placeholder="Password"
-                                    />
-                                    <InputError message={errors.password} />
-                                </div>
+                                ))}
 
                                 <div className="flex items-center space-x-3">
                                     <Checkbox id="remember" name="remember" tabIndex={3} />
@@ -80,11 +84,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     Sign up
                                 </TextLink>
                             </div>
+
+                            {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
                         </>
                     )}
                 </Form>
-
-                {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
             </AuthLayout>
         </>
     );

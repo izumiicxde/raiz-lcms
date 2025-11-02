@@ -3,15 +3,78 @@ import { login } from '@/routes';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
+import FormInput from '@/components/custom-ui/form-input';
 import InputError from '@/components/input-error';
 import Navbar from '@/components/navbar';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
+    const formFields = [
+        {
+            htmlfor: 'name',
+            label: 'Name',
+            placeholder: 'Full name',
+            tabIndex: 1,
+            inputType: 'text',
+        },
+        {
+            htmlfor: 'email',
+            label: 'Email address',
+            placeholder: 'email@example.com',
+            tabIndex: 2,
+            inputType: 'email',
+        },
+        {
+            htmlfor: 'uucms_no',
+            label: 'UUCMS Number',
+            placeholder: 'UXE0000000',
+            tabIndex: 3,
+            inputType: 'text',
+        },
+        {
+            htmlfor: 'course',
+            label: 'Course',
+            placeholder: 'Select course',
+            tabIndex: 4,
+            inputType: 'select',
+            options: ['BCA', 'BSc', 'BCom', 'BBA'],
+        },
+        {
+            htmlfor: 'year',
+            label: 'Year',
+            placeholder: 'Select year',
+            tabIndex: 5,
+            inputType: 'select',
+            options: ['1', '2', '3'],
+        },
+        {
+            htmlfor: 'section',
+            label: 'Section',
+            placeholder: 'Select section',
+            tabIndex: 6,
+            inputType: 'select',
+            options: ['A', 'B', 'C'],
+        },
+        {
+            htmlfor: 'password',
+            label: 'Password',
+            placeholder: 'Password',
+            tabIndex: 7,
+            inputType: 'password',
+        },
+        {
+            htmlfor: 'password_confirmation',
+            label: 'Confirm password',
+            placeholder: 'Confirm password',
+            tabIndex: 8,
+            inputType: 'password',
+        },
+    ];
+
     return (
         <>
             <Navbar />
@@ -26,69 +89,42 @@ export default function Register() {
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-6">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="name"
-                                        name="name"
-                                        placeholder="Full name"
-                                    />
-                                    <InputError message={errors.name} className="mt-2" />
-                                </div>
+                                {formFields.map((field) => {
+                                    if (field.inputType === 'select') {
+                                        return (
+                                            <div key={field.htmlfor} className="grid gap-2">
+                                                <Label htmlFor={field.htmlfor}>{field.label}</Label>
+                                                <Select name={field.htmlfor}>
+                                                    <SelectTrigger id={field.htmlfor} tabIndex={field.tabIndex}>
+                                                        <SelectValue placeholder={field.placeholder} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {field.options?.map((option) => (
+                                                            <SelectItem key={option} value={option}>
+                                                                {option}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <InputError message={errors[field.htmlfor]} />
+                                            </div>
+                                        );
+                                    }
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="email"
-                                        name="email"
-                                        placeholder="email@example.com"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="usn">User Registration Number</Label>
-                                    <Input id="usn" type="text" required tabIndex={5} autoComplete="usn" name="usn" placeholder="UXE0000000" />
-                                    <InputError message={errors.usn} />
-                                </div>
+                                    return (
+                                        <FormInput
+                                            key={field.htmlfor}
+                                            htmlfor={field.htmlfor}
+                                            label={field.label}
+                                            placeholder={field.placeholder}
+                                            tabIndex={field.tabIndex}
+                                            errors={errors}
+                                            inputType={field.inputType as 'text' | 'email' | 'password'}
+                                        />
+                                    );
+                                })}
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        required
-                                        tabIndex={3}
-                                        autoComplete="new-password"
-                                        name="password"
-                                        placeholder="Password"
-                                    />
-                                    <InputError message={errors.password} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">Confirm password</Label>
-                                    <Input
-                                        id="password_confirmation"
-                                        type="password"
-                                        required
-                                        tabIndex={4}
-                                        autoComplete="new-password"
-                                        name="password_confirmation"
-                                        placeholder="Confirm password"
-                                    />
-                                    <InputError message={errors.password_confirmation} />
-                                </div>
-
-                                <Button type="submit" className="mt-2 w-full" tabIndex={5}>
+                                <Button type="submit" className="mt-2 w-full" tabIndex={9}>
                                     {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                                     Create account
                                 </Button>
@@ -96,7 +132,7 @@ export default function Register() {
 
                             <div className="text-center text-sm text-muted-foreground">
                                 Already have an account?{' '}
-                                <TextLink href={login()} tabIndex={6}>
+                                <TextLink href={login()} tabIndex={10}>
                                     Log in
                                 </TextLink>
                             </div>
