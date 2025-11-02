@@ -33,6 +33,7 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'uucms_no' => $user->uucms_no,
                     'course' => $user->course,
                     'year' => $user->year,
                     'section' => $user->section,
@@ -52,20 +53,21 @@ class UserController extends Controller
         ]);
     }
 
-
     /**
      * Follow a user.
      */
     public function follow($id)
     {
-        $user = Auth::user();
+        $currentUser = Auth::user();
 
-        if ($user->id === $id) {
+        // prevent following self
+        if ($currentUser->id === $id) {
             return back()->withErrors(['You cannot follow yourself.']);
         }
 
-        if (!$user->following()->where('following_id', $id)->exists()) {
-            $user->following()->attach($id);
+        // avoid duplicate follows
+        if (!$currentUser->following()->where('following_id', $id)->exists()) {
+            $currentUser->following()->attach($id);
         }
 
         return back();
@@ -76,10 +78,11 @@ class UserController extends Controller
      */
     public function unfollow($id)
     {
-        $user = Auth::user();
+        $currentUser = Auth::user();
 
-        if ($user->following()->where('following_id', $id)->exists()) {
-            $user->following()->detach($id);
+        // detach only if already following
+        if ($currentUser->following()->where('following_id', $id)->exists()) {
+            $currentUser->following()->detach($id);
         }
 
         return back();

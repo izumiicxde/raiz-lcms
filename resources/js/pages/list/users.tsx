@@ -1,10 +1,9 @@
 import Navbar from '@/components/navbar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface User {
@@ -15,7 +14,7 @@ interface User {
     course: string;
     year: number;
     section: string;
-    role_type: string;
+    is_following: boolean;
 }
 
 interface PaginationLinks {
@@ -32,7 +31,47 @@ export default function Users() {
     const { users, filters } = props;
 
     const [search, setSearch] = useState(filters?.search || '');
+    const [following, setFollowing] = useState<Record<string, boolean>>(() => {
+        const initial: Record<string, boolean> = {};
+        users?.data?.forEach((user) => {
+            initial[user.id] = user.is_following;
+        });
+        return initial;
+    });
+
     const userList = users?.data || [];
+
+    // TODO: Debounce the toggle to reduce database calls
+    const toggleFollow = (user: User) => {
+        const currentlyFollowing = following[user.id];
+        setFollowing((prev) => ({
+            ...prev,
+            [user.id]: !currentlyFollowing,
+        }));
+
+        if (currentlyFollowing) {
+            // If currently following → unfollow
+            router.delete(`/list/users/${user.id}/unfollow`, {
+                preserveScroll: true,
+                onError: () => {
+                    // rollback optimistic update if error
+                    setFollowing((prev) => ({ ...prev, [user.id]: currentlyFollowing }));
+                },
+            });
+        } else {
+            // If not following → follow
+            router.post(
+                `/list/users/${user.id}/follow`,
+                {},
+                {
+                    preserveScroll: true,
+                    onError: () => {
+                        setFollowing((prev) => ({ ...prev, [user.id]: currentlyFollowing }));
+                    },
+                },
+            );
+        }
+    };
 
     return (
         <>
@@ -42,7 +81,7 @@ export default function Users() {
             <div className="mx-auto max-w-6xl px-4 py-8">
                 <Card className="border border-gray-200 shadow-md">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <CardTitle className="text-2xl font-semibold text-gray-800">User Management</CardTitle>
+                        <CardTitle className="font-bebas text-4xl text-gray-800 dark:text-white">User Management</CardTitle>
                         <div className="flex items-center gap-2">
                             <Input
                                 type="text"
@@ -52,11 +91,21 @@ export default function Users() {
                                 className="w-64"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
-                                        window.location.href = `/list/users?search=${encodeURIComponent(search)}`;
+                                        router.visit(`/list/users?search=${encodeURIComponent(search)}`, {
+                                            preserveScroll: true,
+                                        });
                                     }
                                 }}
                             />
-                            <Button onClick={() => (window.location.href = `/list/users?search=${encodeURIComponent(search)}`)}>Search</Button>
+                            <Button
+                                onClick={() =>
+                                    router.visit(`/list/users?search=${encodeURIComponent(search)}`, {
+                                        preserveScroll: true,
+                                    })
+                                }
+                            >
+                                Search
+                            </Button>
                         </div>
                     </CardHeader>
 
@@ -74,8 +123,7 @@ export default function Users() {
                                             <TableHead>Course</TableHead>
                                             <TableHead>Year</TableHead>
                                             <TableHead>Section</TableHead>
-                                            <TableHead>Role</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -87,14 +135,13 @@ export default function Users() {
                                                 <TableCell>{user.course || '—'}</TableCell>
                                                 <TableCell>{user.year || '—'}</TableCell>
                                                 <TableCell>{user.section || '—'}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={user.role_type === 'admin' ? 'destructive' : 'secondary'} className="capitalize">
-                                                        {user.role_type}
-                                                    </Badge>
-                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="outline" size="sm">
-                                                        Manage
+                                                    <Button
+                                                        variant={following[user.id] ? 'secondary' : 'default'}
+                                                        size="sm"
+                                                        onClick={() => toggleFollow(user)}
+                                                    >
+                                                        {following[user.id] ? 'Unfollow' : 'Follow'}
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -112,8 +159,11 @@ export default function Users() {
                                         key={i}
                                         variant={link.active ? 'default' : 'outline'}
                                         size="sm"
+                                        className="cursor-pointer"
                                         disabled={!link.url}
-                                        onClick={() => (link.url ? (window.location.href = link.url) : null)}
+                                        onClick={() => {
+                                            if (link.url) router.visit(link.url, { preserveScroll: true });
+                                        }}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}
