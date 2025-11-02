@@ -5,7 +5,7 @@ use App\Http\Controllers\StudyContentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\FileUploadController;
-
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -29,6 +29,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // delete a content
     Route::delete('/study-content/{id}', [StudyContentController::class, 'destroy'])->name('study-content.destroy');
+
+
+    // Following and Followers structure...
+    Route::get('/list/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/list/users/{id}/follow', [UserController::class, 'follow'])->name('users.follow');
+    Route::delete('/list/users/{id}/unfollow', [UserController::class, 'unfollow'])->name('users.unfollow');
+
 
 });
 

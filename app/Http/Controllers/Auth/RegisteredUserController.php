@@ -9,9 +9,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -30,30 +32,52 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'uucms_no' => 'required|string|max:12|regex:/^[A-Za-z0-9]+$/|unique:' . User::class,
-            'course' => 'required|string|max:255',
-            'year' => 'required|integer|min:1|max:4',
-            'section' => 'required|string|size:1|alpha',
-        ]);
-        \Log::info('Registration Payload:', $request->all());
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'uucms_no' => $request->uucms_no,
-            'course' => $request->course,
-            'year' => $request->year,
-            'section' => strtoupper($request->section),
-        ]);
+        try {
+            // Validate incoming request
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'uucms_no' => 'required|string|max:12|regex:/^[A-Za-z0-9]+$/|unique:' . User::class,
+                'course' => 'required|string|max:255',
+                'year' => 'required|integer|min:1|max:4',
+                'section' => 'required|string|size:1|alpha',
+            ]);
 
-        event(new Registered($user));
+            // Create user record
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'uucms_no' => $request->uucms_no,
+                'course' => $request->course,
+                'year' => $request->year,
+                'section' => strtoupper($request->section),
+            ]);
 
-        Auth::login($user);
+            // Fire registration event
+            event(new Registered($user));
 
-        return redirect()->intended(route('dashboard', absolute: false));
+            // Log the user in
+            Auth::login($user);
+
+            return redirect()->intended(route('dashboard', absolute: false))
+                ->with('success', 'Registration successful. Welcome to your dashboard.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Laravel already handles validation exceptions — just rethrow
+            throw $e;
+        } catch (Throwable $e) {
+            // Log unexpected errors for debugging
+            Log::error('Registration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            // Redirect back with a generic error
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred during registration. Please try again later.');
+        }
     }
 }

@@ -13,6 +13,7 @@ const Navbar = () => {
     const authlinks = [
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Upload', href: '/upload' },
+        { label: 'All Users', href: '/list/users' },
     ];
 
     const { auth } = usePage<SharedData>().props;

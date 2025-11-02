@@ -14,27 +14,9 @@ import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
     const formFields = [
-        {
-            htmlfor: 'name',
-            label: 'Name',
-            placeholder: 'Full name',
-            tabIndex: 1,
-            inputType: 'text',
-        },
-        {
-            htmlfor: 'email',
-            label: 'Email address',
-            placeholder: 'email@example.com',
-            tabIndex: 2,
-            inputType: 'email',
-        },
-        {
-            htmlfor: 'uucms_no',
-            label: 'UUCMS Number',
-            placeholder: 'UXE0000000',
-            tabIndex: 3,
-            inputType: 'text',
-        },
+        { htmlfor: 'name', label: 'Name', placeholder: 'Full name', tabIndex: 1, inputType: 'text' },
+        { htmlfor: 'email', label: 'Email address', placeholder: 'email@example.com', tabIndex: 2, inputType: 'email' },
+        { htmlfor: 'uucms_no', label: 'UUCMS Number', placeholder: 'UXE0000000', tabIndex: 3, inputType: 'text' },
         {
             htmlfor: 'course',
             label: 'Course',
@@ -59,13 +41,7 @@ export default function Register() {
             inputType: 'select',
             options: ['A', 'B', 'C'],
         },
-        {
-            htmlfor: 'password',
-            label: 'Password',
-            placeholder: 'Password',
-            tabIndex: 7,
-            inputType: 'password',
-        },
+        { htmlfor: 'password', label: 'Password', placeholder: 'Password', tabIndex: 7, inputType: 'password' },
         {
             htmlfor: 'password_confirmation',
             label: 'Confirm password',
@@ -106,25 +82,27 @@ export default function Register() {
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                                <InputError message={errors[field.htmlfor]} />
+                                                {errors[field.htmlfor] && <InputError message={errors[field.htmlfor]} />}
                                             </div>
                                         );
                                     }
 
                                     return (
-                                        <FormInput
-                                            key={field.htmlfor}
-                                            htmlfor={field.htmlfor}
-                                            label={field.label}
-                                            placeholder={field.placeholder}
-                                            tabIndex={field.tabIndex}
-                                            errors={errors}
-                                            inputType={field.inputType as 'text' | 'email' | 'password'}
-                                        />
+                                        <div key={field.htmlfor} className="grid gap-2">
+                                            <FormInput
+                                                htmlfor={field.htmlfor}
+                                                label={field.label}
+                                                placeholder={field.placeholder}
+                                                tabIndex={field.tabIndex}
+                                                errors={errors}
+                                                inputType={field.inputType as 'text' | 'email' | 'password'}
+                                            />
+                                            {errors[field.htmlfor] && <InputError message={errors[field.htmlfor]} />}
+                                        </div>
                                     );
                                 })}
 
-                                <Button type="submit" className="mt-2 w-full" tabIndex={9}>
+                                <Button type="submit" className="mt-2 w-full" tabIndex={9} disabled={processing}>
                                     {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                                     Create account
                                 </Button>

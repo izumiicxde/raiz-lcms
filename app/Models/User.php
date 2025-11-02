@@ -7,6 +7,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $followers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $following
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasUuids;
@@ -49,4 +53,16 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id');
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id');
+    }
+
+
 }

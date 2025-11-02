@@ -52,8 +52,9 @@ export default function Dashboard() {
                             return (
                                 <div
                                     key={content.id}
-                                    className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition hover:shadow-md"
+                                    className="flex flex-col overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition hover:shadow-md"
                                 >
+                                    {/* File Preview */}
                                     {type === 'image' ? (
                                         <img
                                             src={fileUrl}
@@ -67,8 +68,10 @@ export default function Dashboard() {
                                         </div>
                                     )}
 
-                                    <div className="flex flex-col justify-end p-5">
+                                    {/* Card Body (moved to bottom) */}
+                                    <div className="mt-auto flex flex-col justify-end p-5">
                                         <h2 className="font-bebas text-2xl font-[300]">{content.title}</h2>
+
                                         {content.description && <p className="mt-2 text-gray-700">{content.description}</p>}
 
                                         {content.tags.length > 0 && (
@@ -81,6 +84,7 @@ export default function Dashboard() {
                                             </div>
                                         )}
 
+                                        {/* Actions */}
                                         <div className="mt-4 flex items-center gap-5">
                                             <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">
                                                 View
