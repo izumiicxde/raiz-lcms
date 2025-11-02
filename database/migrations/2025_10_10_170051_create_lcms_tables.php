@@ -1,122 +1,94 @@
-<?php 
+<?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up()
+return new class extends Migration {
+    public function up(): void
     {
-        // USERS
+        // USERS TABLE
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('uucms_no')->unique();
             $table->string('password');
-            $table->string('role_type')->nullable();
-            $table->string('usn');
+            $table->string('course');
+            $table->integer('year');
+            $table->char('section', 1);
+            $table->rememberToken()->nullable();
             $table->timestamps();
         });
 
-        // ROLES
-        Schema::create('roles', function (Blueprint $table) {
+        // STUDY CONTENTS TABLE
+        Schema::create('study_contents', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->timestamps();
-        });
-
-        // USER_ROLE
-        Schema::create('user_role', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('role_id');
-            $table->timestamp('assigned_at')->nullable();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
-        });
-
-        // COURSES
-        Schema::create('courses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->uuid('instructor_id');
-            $table->timestamps();
-
-            $table->foreign('instructor_id')->references('id')->on('users')->onDelete('cascade');
-        });
-
-        // CONTENT
-        Schema::create('contents', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('course_id');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('file_path');
-            $table->string('type');
-            $table->enum('privacy', ['public','private','enlisted'])->default('private');
-            $table->string('section')->nullable();
+            $table->string('file_type');
+            $table->integer('year');
+            $table->char('section', 1);
+            $table->boolean('is_public')->default(false);
             $table->timestamps();
-
-            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
 
-        // TAGS
+        // TAGS TABLE
         Schema::create('tags', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->text('description')->nullable();
+            $table->string('name')->unique();
             $table->timestamps();
         });
 
-        // CONTENT_TAG
-        Schema::create('content_tag', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('content_id');
-            $table->uuid('tag_id');
-
-            $table->foreign('content_id')->references('id')->on('contents')->onDelete('cascade');
-            $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
-        });
-
-        // PERMISSION_REQUESTS
-        Schema::create('permission_requests', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('content_id');
-            $table->string('status');
-            $table->text('message')->nullable();
+        // STUDY CONTENT - TAG PIVOT TABLE
+        Schema::create('study_content_tag', function (Blueprint $table) {
+            $table->foreignUuid('study_content_id')->constrained('study_contents')->onDelete('cascade');
+            $table->foreignUuid('tag_id')->constrained('tags')->onDelete('cascade');
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('content_id')->references('id')->on('contents')->onDelete('cascade');
+            $table->primary(['study_content_id', 'tag_id']);
         });
 
-        // FILE_ACCESS
-        Schema::create('file_access', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('content_id');
-            $table->timestamp('accessed_at')->nullable();
+        // FOLLOWERS TABLE
+        Schema::create('followers', function (Blueprint $table) {
+            $table->foreignUuid('follower_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('following_id')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
+            $table->primary(['follower_id', 'following_id']);
+        });
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('content_id')->references('id')->on('contents')->onDelete('cascade');
+        // NOTIFICATIONS TABLE
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('sender_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('receiver_id')->constrained('users')->onDelete('cascade');
+            $table->string('type');
+            $table->enum('status', ['unread', 'read'])->default('unread');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+
+        // SESSIONS TABLE
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignUuid('user_id')->nullable()->index()->constrained('users')->onDelete('cascade');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+            $table->timestamps();
         });
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('file_access');
-        Schema::dropIfExists('permission_requests');
-        Schema::dropIfExists('content_tag');
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('followers');
+        Schema::dropIfExists('study_content_tag');
         Schema::dropIfExists('tags');
-        Schema::dropIfExists('contents');
-        Schema::dropIfExists('courses');
-        Schema::dropIfExists('user_role');
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('study_contents');
         Schema::dropIfExists('users');
     }
 };
-?> 

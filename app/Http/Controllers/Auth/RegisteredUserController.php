@@ -32,17 +32,22 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'usn' => 'required|string|max:12|regex:/^[A-Za-z0-9]+$/|unique:'.User::class,
+            'uucms_no' => 'required|string|max:12|regex:/^[A-Za-z0-9]+$/|unique:' . User::class,
+            'course' => 'required|string|max:255',
+            'year' => 'required|integer|min:1|max:4',
+            'section' => 'required|string|size:1|alpha',
         ]);
-
+        \Log::info('Registration Payload:', $request->all());
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'usn' => $request->usn,
-            'role_type' => 'student',
+            'uucms_no' => $request->uucms_no,
+            'course' => $request->course,
+            'year' => $request->year,
+            'section' => strtoupper($request->section),
         ]);
 
         event(new Registered($user));
