@@ -22,6 +22,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // render user specific content on dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Edit content
+    Route::get('/study-content/{id}/edit', [StudyContentController::class, 'edit'])->name('study-content.edit-content');
+    Route::put('/study-content/{id}', [StudyContentController::class, 'update'])->name('study-content.update');
+
+    // delete a content
+    Route::delete('/study-content/{id}', [StudyContentController::class, 'destroy'])->name('study-content.destroy');
+
 });
 
 require __DIR__ . '/settings.php';

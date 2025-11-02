@@ -65,4 +65,56 @@ class StudyContentController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Content uploaded successfully!');
     }
+    public function edit($id)
+    {
+        $content = StudyContent::with('tags')->findOrFail($id);
+
+        // Optional: Ensure user can only edit their own content
+        if ($content->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return Inertia::render('edit-content', [
+            'content' => $content,
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $content = StudyContent::findOrFail($id);
+
+        if ($content->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $content->update($validated);
+
+        return redirect()->route('dashboard')->with('success', 'Study material updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $content = StudyContent::findOrFail($id);
+
+        // Ensure the user can only delete their own file
+        if ($content->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Delete the physical file if it exists
+        if ($content->file_path && \Storage::exists('public/' . $content->file_path)) {
+            \Storage::delete('public/' . $content->file_path);
+        }
+
+        // Remove the record from database
+        $content->delete();
+
+        return redirect()->route('dashboard')->with('success', 'Study content deleted successfully.');
+    }
+
 }
