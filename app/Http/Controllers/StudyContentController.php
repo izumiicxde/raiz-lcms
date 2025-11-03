@@ -6,7 +6,9 @@ use App\Models\StudyContent;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class StudyContentController extends Controller
@@ -107,8 +109,8 @@ class StudyContentController extends Controller
         }
 
         // Delete the physical file if it exists
-        if ($content->file_path && \Storage::exists('public/' . $content->file_path)) {
-            \Storage::delete('public/' . $content->file_path);
+        if ($content->file_path && Storage::exists('public/' . $content->file_path)) {
+            Storage::delete('public/' . $content->file_path);
         }
 
         // Remove the record from database
@@ -117,4 +119,36 @@ class StudyContentController extends Controller
         return redirect()->route('dashboard')->with('success', 'Study content deleted successfully.');
     }
 
+    public function index()
+    {
+        $user = Auth::user();
+
+        // 1. Get IDs of users that the current user follows
+        $followingIds = DB::table('followers')
+            ->where('follower_id', $user->id)
+            ->pluck('following_id');
+
+        // 2. Private content from followed users (excluding own uploads)
+        $privateContent = StudyContent::with(['user:id,name,uucms_no,year,course,section'])
+            ->where('is_public', false)
+            ->whereIn('user_id', $followingIds)
+            ->where('user_id', '!=', $user->id)
+            ->latest()
+            ->get();
+
+        // 3. All public content (excluding own uploads)
+        $publicContent = StudyContent::with(['user:id,name,uucms_no,year,course,section'])
+            ->where('is_public', true)
+            ->where('user_id', '!=', $user->id)
+            ->latest()
+            ->get();
+
+        // 4. Merge private first, then public
+        $contents = $privateContent->concat($publicContent);
+
+        // 5. Return response to Inertia
+        return Inertia::render('homepage', [
+            'contents' => $contents,
+        ]);
+    }
 }

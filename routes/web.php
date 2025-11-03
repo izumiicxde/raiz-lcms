@@ -37,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/list/users/{id}/unfollow', [UserController::class, 'unfollow'])->name('users.unfollow');
 
 
+    Route::get('/', [StudyContentController::class, 'index'])->name('homepage');
+
 });
 
 require __DIR__ . '/settings.php';
