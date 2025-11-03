@@ -100,7 +100,7 @@ export default function Dashboard() {
 
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <button className="text-sm text-red-600 underline">Delete</button>
+                                                    <button className="cursor-pointer text-sm text-red-600 underline">Delete</button>
                                                 </DialogTrigger>
                                                 <DialogContent className="max-w-sm">
                                                     <DialogHeader>

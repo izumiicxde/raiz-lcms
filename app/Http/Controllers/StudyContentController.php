@@ -55,11 +55,15 @@ class StudyContentController extends Controller
 
             // TAG HANDLING
             if (!empty($data['tags'])) {
-                $tags = array_filter(array_map('trim', explode(',', $data['tags'])));
+                $rawTags = array_filter(array_map('trim', explode(',', $data['tags'])));
                 $tagIds = [];
-                foreach ($tags as $tagName) {
-                    $tag = Tag::firstOrCreate(['name' => $tagName]);
-                    $tagIds[] = $tag->id;
+                foreach ($rawTags as $rawTag) {
+                    // Strip leading # for storage
+                    $cleanTagName = ltrim($rawTag, '#');
+                    if (!empty($cleanTagName)) {
+                        $tag = Tag::firstOrCreate(['name' => $cleanTagName]);
+                        $tagIds[] = $tag->id;
+                    }
                 }
                 $content->tags()->sync($tagIds);
             }

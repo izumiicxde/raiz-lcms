@@ -11,6 +11,7 @@ import { Button } from './ui/button';
 
 const Navbar = () => {
     const authlinks = [
+        { label: 'Home', href: '/' },
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Upload', href: '/upload' },
         { label: 'All Users', href: '/list/users' },
