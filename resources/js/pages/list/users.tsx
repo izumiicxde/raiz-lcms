@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 interface User {
     id: string;
@@ -25,12 +25,14 @@ interface PaginationLinks {
 
 export default function Users() {
     const { props } = usePage<{
+        auth: { user: any };
         users: { data: User[]; links: PaginationLinks[] };
         filters: { search?: string };
     }>();
     const { users, filters } = props;
 
     const [search, setSearch] = useState(filters?.search || '');
+    const [showFollowingOnly, setShowFollowingOnly] = useState(false);
     const [following, setFollowing] = useState<Record<string, boolean>>(() => {
         const initial: Record<string, boolean> = {};
         users?.data?.forEach((user) => {
@@ -39,9 +41,7 @@ export default function Users() {
         return initial;
     });
 
-    const userList = users?.data || [];
-
-    // TODO: Debounce the toggle to reduce database calls
+    // Toggle follow/unfollow
     const toggleFollow = (user: User) => {
         const currentlyFollowing = following[user.id];
         setFollowing((prev) => ({
@@ -50,16 +50,13 @@ export default function Users() {
         }));
 
         if (currentlyFollowing) {
-            // If currently following → unfollow
             router.delete(`/list/users/${user.id}/unfollow`, {
                 preserveScroll: true,
                 onError: () => {
-                    // rollback optimistic update if error
                     setFollowing((prev) => ({ ...prev, [user.id]: currentlyFollowing }));
                 },
             });
         } else {
-            // If not following → follow
             router.post(
                 `/list/users/${user.id}/follow`,
                 {},
@@ -73,6 +70,21 @@ export default function Users() {
         }
     };
 
+    // Apply filtering in-memory (client side)
+    const filteredUsers = useMemo(() => {
+        let list = users?.data || [];
+        if (showFollowingOnly) {
+            list = list.filter((user) => following[user.id]);
+        }
+        if (search.trim()) {
+            const s = search.trim().toLowerCase();
+            list = list.filter(
+                (u) => u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s) || (u.uucms_no && u.uucms_no.toLowerCase().includes(s)),
+            );
+        }
+        return list;
+    }, [users?.data, following, showFollowingOnly, search]);
+
     return (
         <>
             <Navbar />
@@ -81,8 +93,9 @@ export default function Users() {
             <div className="mx-auto max-w-6xl px-4 py-8">
                 <Card className="border border-gray-200 shadow-md">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <CardTitle className="font-bebas text-4xl text-gray-800 dark:text-white">User Management</CardTitle>
-                        <div className="flex items-center gap-2">
+                        <CardTitle className="font-bebas text-4xl text-gray-800 dark:text-white">All Students</CardTitle>
+
+                        <div className="flex flex-wrap items-center gap-3">
                             <Input
                                 type="text"
                                 value={search}
@@ -106,12 +119,22 @@ export default function Users() {
                             >
                                 Search
                             </Button>
+
+                            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="checkbox"
+                                    checked={showFollowingOnly}
+                                    onChange={(e) => setShowFollowingOnly(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300"
+                                />
+                                Show only following
+                            </label>
                         </div>
                     </CardHeader>
 
                     <CardContent>
-                        {userList.length === 0 ? (
-                            <p className="py-6 text-center text-gray-600">No users found.</p>
+                        {filteredUsers.length === 0 ? (
+                            <p className="py-6 text-center text-gray-600 dark:text-gray-400">No users found.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <Table>
@@ -127,7 +150,7 @@ export default function Users() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {userList.map((user) => (
+                                        {filteredUsers.map((user) => (
                                             <TableRow key={user.id}>
                                                 <TableCell className="font-medium">{user.name}</TableCell>
                                                 <TableCell>{user.email}</TableCell>
@@ -152,7 +175,7 @@ export default function Users() {
                         )}
 
                         {/* Pagination */}
-                        {users?.links?.length > 0 && (
+                        {!showFollowingOnly && users?.links?.length > 0 && (
                             <div className="mt-6 flex justify-center gap-2">
                                 {users.links.map((link, i) => (
                                     <Button

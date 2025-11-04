@@ -1,4 +1,5 @@
 import Navbar from '@/components/navbar';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Link, usePage } from '@inertiajs/react';
@@ -38,13 +39,13 @@ export default function Dashboard() {
     return (
         <>
             <Navbar />
-            <div className="relative mx-auto max-w-6xl px-4 py-10">
-                <h1 className="mb-8 font-bebas text-3xl font-semibold">My Uploaded Study Materials</h1>
+            <div className="relative mx-auto max-w-7xl px-6 py-12">
+                <h1 className="mb-10 font-bebas text-4xl tracking-wide text-gray-900 dark:text-gray-100">My Uploaded Study Materials</h1>
 
                 {contents.length === 0 ? (
-                    <p className="text-gray-600">No study content uploaded yet.</p>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">No study content uploaded yet.</p>
                 ) : (
-                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         {contents.map((content) => {
                             const type = getFileType(content.file_type);
                             const fileUrl = `/storage/${content.file_path}`;
@@ -52,75 +53,109 @@ export default function Dashboard() {
                             return (
                                 <div
                                     key={content.id}
-                                    className="flex flex-col overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition hover:shadow-md"
+                                    className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
                                 >
                                     {/* File Preview */}
                                     {type === 'image' ? (
-                                        <img
-                                            src={fileUrl}
-                                            alt={content.title}
-                                            className="h-56 w-full cursor-pointer object-cover hover:opacity-90"
-                                            onClick={() => setPreviewImage(fileUrl)}
-                                        />
+                                        <div className="relative h-52 w-full overflow-hidden">
+                                            <img
+                                                src={fileUrl}
+                                                alt={content.title}
+                                                className="h-full w-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-105"
+                                                onClick={() => setPreviewImage(fileUrl)}
+                                            />
+                                        </div>
                                     ) : (
-                                        <div className="flex h-56 items-center justify-center bg-gray-100 font-bebas text-3xl font-medium text-gray-600">
+                                        <div className="flex h-52 items-center justify-center bg-gray-100 font-bebas text-4xl tracking-widest text-gray-500 select-none dark:bg-gray-800 dark:text-gray-300">
                                             {type.toUpperCase()}
                                         </div>
                                     )}
 
-                                    {/* Card Body (moved to bottom) */}
-                                    <div className="mt-auto flex flex-col justify-end p-5">
-                                        <h2 className="font-bebas text-2xl font-[300]">{content.title}</h2>
+                                    {/* Card Body */}
+                                    <div className="flex flex-grow flex-col justify-between p-6">
+                                        <div>
+                                            <h2 className="mb-1 font-bebas text-2xl leading-tight text-gray-900 dark:text-gray-100">
+                                                {content.title}
+                                            </h2>
 
-                                        {content.description && <p className="mt-2 text-gray-700">{content.description}</p>}
+                                            {content.description && (
+                                                <p className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{content.description}</p>
+                                            )}
 
-                                        {content.tags.length > 0 && (
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                {content.tags.map((tag) => (
-                                                    <span key={tag.id} className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800">
-                                                        {tag.name}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                            {content.tags.length > 0 && (
+                                                <div className="mb-4 flex flex-wrap gap-2">
+                                                    {content.tags.map((tag) => (
+                                                        <span
+                                                            key={tag.id}
+                                                            className="cursor-pointer rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-800/60"
+                                                        >
+                                                            {tag.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Actions */}
-                                        <div className="mt-4 flex items-center gap-5">
-                                            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">
+                                        <div className="mt-auto flex flex-wrap gap-2 border-t border-gray-100 pt-4 dark:border-gray-800">
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                className="cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                                onClick={() => setPreviewImage(fileUrl)}
+                                            >
                                                 View
+                                            </Button>
+
+                                            <a href={fileUrl} download>
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="cursor-pointer bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-800"
+                                                >
+                                                    Download
+                                                </Button>
                                             </a>
 
-                                            <a href={fileUrl} download className="text-sm text-indigo-600 underline">
-                                                Download
-                                            </a>
-
-                                            <Link href={`/study-content/${content.id}/edit`} className="text-sm text-green-600 underline">
-                                                Edit
+                                            <Link href={`/study-content/${content.id}/edit`}>
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="cursor-pointer bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-800"
+                                                >
+                                                    Edit
+                                                </Button>
                                             </Link>
 
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <button className="cursor-pointer text-sm text-red-600 underline">Delete</button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        className="cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-800"
+                                                    >
+                                                        Delete
+                                                    </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="max-w-sm">
+                                                <DialogContent className="max-w-sm rounded-lg">
                                                     <DialogHeader>
-                                                        <DialogTitle>Confirm Deletion</DialogTitle>
+                                                        <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                            Confirm Deletion
+                                                        </DialogTitle>
                                                     </DialogHeader>
-                                                    <p className="text-gray-700">
+                                                    <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                                                         Are you sure you want to delete <strong>{content.title}</strong>? This action cannot be
                                                         undone.
                                                     </p>
-                                                    <DialogFooter>
+                                                    <DialogFooter className="mt-5">
                                                         <DialogClose asChild>
-                                                            <button className="rounded-md bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">
-                                                                Cancel
-                                                            </button>
+                                                            <Button variant="outline">Cancel</Button>
                                                         </DialogClose>
                                                         <Link
                                                             href={`/study-content/${content.id}`}
                                                             method="delete"
                                                             as="button"
-                                                            className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                                                            className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
                                                         >
                                                             Delete
                                                         </Link>
@@ -129,7 +164,9 @@ export default function Dashboard() {
                                             </Dialog>
                                         </div>
 
-                                        <p className="mt-3 text-xs text-gray-400">Uploaded on {new Date(content.created_at).toLocaleString()}</p>
+                                        <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
+                                            Uploaded on {new Date(content.created_at).toLocaleString()}
+                                        </p>
                                     </div>
                                 </div>
                             );
@@ -140,14 +177,19 @@ export default function Dashboard() {
 
             {/* Fullscreen Image Preview */}
             {previewImage && (
-                <div className="bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-black" onClick={() => setPreviewImage(null)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setPreviewImage(null)}>
                     <button
                         onClick={() => setPreviewImage(null)}
-                        className="absolute top-6 right-8 text-4xl font-bold text-white hover:text-gray-300"
+                        className="absolute top-6 right-8 rounded-full bg-white/10 px-4 py-2 text-3xl font-bold text-white backdrop-blur-sm transition hover:bg-white/20"
                     >
-                        &times;
+                        ×
                     </button>
-                    <img src={previewImage} alt="Preview" className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl" />
+                    <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
                 </div>
             )}
         </>

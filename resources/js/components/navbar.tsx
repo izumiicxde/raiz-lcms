@@ -14,7 +14,7 @@ const Navbar = () => {
         { label: 'Home', href: '/' },
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Upload', href: '/upload' },
-        { label: 'All Users', href: '/list/users' },
+        { label: 'All Students', href: '/list/users' },
     ];
 
     const { auth } = usePage<SharedData>().props;
